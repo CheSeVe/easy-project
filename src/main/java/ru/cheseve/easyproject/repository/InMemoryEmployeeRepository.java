@@ -1,5 +1,7 @@
 package ru.cheseve.easyproject.repository;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Repository;
 import ru.cheseve.easyproject.entity.Employee;
 import ru.cheseve.easyproject.exception.RepositoryException;
@@ -7,8 +9,9 @@ import ru.cheseve.easyproject.exception.RepositoryException;
 import java.util.*;
 
 @Repository
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class InMemoryEmployeeRepository implements EmployeeRepository {
-    private final Map<Long, Employee> employeeMap = new HashMap<>();
+    final Map<Long, Employee> employeeMap = new HashMap<>();
 
     long id;
 
@@ -17,31 +20,36 @@ public class InMemoryEmployeeRepository implements EmployeeRepository {
     }
 
     public Employee save(Employee employee) {
-        if (employee.getId() == null)
+        if (employee == null) {
+            throw new RepositoryException("Employee can't be null");
+        }
+        if (employee.getId() == null) {
             employee.setId(id++);
-
+        }
         employeeMap.put(employee.getId(), employee);
         return employee;
     }
 
     public boolean existsByEmail(String email) {
-        if (email == null)
+        if (email == null) {
             throw new RepositoryException("Email cannot be null");
+        }
         return employeeMap.values().stream()
                 .anyMatch(e -> email.equals(e.getEmail()));
     }
 
     public void deleteById(Long id) {
-        if (!employeeMap.containsKey(id))
+        if (!employeeMap.containsKey(id)) {
             throw new RepositoryException(String.format(
                     "Employee with id %d does not exist",
                     id
             ));
+        }
         employeeMap.remove(id);
     }
 
     public Optional<Employee> findById(Long id) {
-        return Optional.empty();
+        return Optional
+                .ofNullable(employeeMap.get(id));
     }
-
 }

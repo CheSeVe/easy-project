@@ -48,64 +48,52 @@ public class EmployeeService {
     }
 
     private void validateEmailUniqueness(String email) {
-        if (repository.existsByEmail(email))
+        if (repository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException(String.format(
                     "Employee with email %s already exists", email));
+        }
     }
 
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
 
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
-        throwIfEmailAlreadyExists(
-                isExistingEmailInPutRequest(requestDTO, existingEmployee),
-                requestDTO.email());
+        validateEmailUniqueness(requestDTO.email(), existingEmployee);
 
         Employee newEmployee = EmployeeMapper.mapRequestToEntity(requestDTO);
         newEmployee.setId(existingEmployee.getId());
         return EmployeeMapper.mapEntityToResponse(repository.save(newEmployee));
     }
 
-    private void throwIfEmailAlreadyExists(boolean condition, String email) {
-        if (condition)
+    private void validateEmailUniqueness(String email, Employee existingEmployee) {
+        if (email != null
+                && !email.equals(existingEmployee.getEmail())
+                && repository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException(String.format(
                     "Employee with email %s already exists", email));
-    }
-
-    private boolean isExistingEmailInPutRequest(EmployeeRequestDTO requestDTO, Employee existingEmployee) {
-        return repository.existsByEmail(requestDTO.email())
-                && !requestDTO.email().equals(existingEmployee.getEmail());
+        }
     }
 
     public EmployeeResponseDTO patchEmployee(Long id, EmployeePatchRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
-        if (requestDTO.name() != null && !requestDTO.name().isBlank())
+        if (requestDTO.name() != null && !requestDTO.name().isBlank()) {
             existingEmployee.setName(requestDTO.name());
-
-        if (requestDTO.surname() != null && !requestDTO.surname().isBlank())
+        }
+        if (requestDTO.surname() != null && !requestDTO.surname().isBlank()) {
             existingEmployee.setSurname(requestDTO.surname());
-
+        }
         if (requestDTO.email() != null) {
-            throwIfEmailAlreadyExists(
-                    validateEmailUniquenessForPatch(requestDTO, existingEmployee),
-                    requestDTO.email());
-
+            validateEmailUniqueness(requestDTO.email(), existingEmployee);
             existingEmployee.setEmail(requestDTO.email());
         }
-
-        if (requestDTO.password() != null)
+        if (requestDTO.password() != null) {
             existingEmployee.setPassword(requestDTO.password());
-
-        if (requestDTO.role() != null)
+        }
+        if (requestDTO.role() != null) {
             existingEmployee.setRole(requestDTO.role());
-
+        }
         return EmployeeMapper.mapEntityToResponse(repository.save(existingEmployee));
-    }
-
-    private boolean validateEmailUniquenessForPatch(EmployeePatchRequestDTO requestDTO, Employee existingEmployee) {
-        return repository.existsByEmail(requestDTO.email())
-                && !requestDTO.email().equals(existingEmployee.getEmail());
     }
 
     public void deleteEmployee(Long id) {

@@ -26,17 +26,13 @@ public class EmployeeController {
     @GetMapping("/employees")
     public ResponseEntity<List<EmployeeResponseDTO>> getAllEmployees() {
         return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(employeeService.getAllEmployees());
+                .ok(employeeService.getAllEmployees());
     }
 
     @GetMapping("/employees/{id}")
     public ResponseEntity<EmployeeResponseDTO> getEmployee(@PathVariable Long id) {
         return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(employeeService.getEmployee(id));
+                .ok(employeeService.getEmployee(id));
     }
 
     @PostMapping("/employees")

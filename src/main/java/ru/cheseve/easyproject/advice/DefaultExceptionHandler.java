@@ -3,15 +3,15 @@ package ru.cheseve.easyproject.advice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.cheseve.easyproject.dto.ExceptionResponse;
 import ru.cheseve.easyproject.exception.EmailAlreadyExistsException;
 import ru.cheseve.easyproject.exception.EntityNotFoundException;
 
 import java.util.List;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class DefaultExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
