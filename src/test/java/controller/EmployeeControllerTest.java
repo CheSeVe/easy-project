@@ -1,0 +1,62 @@
+package controller;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import ru.cheseve.easyproject.controller.EmployeeController;
+import ru.cheseve.easyproject.dto.EmployeeResponseDTO;
+import ru.cheseve.easyproject.enums.Role;
+import ru.cheseve.easyproject.service.EmployeeService;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+public class EmployeeControllerTest {
+
+    @Mock
+    EmployeeService service;
+
+    @InjectMocks
+    EmployeeController controller;
+
+    @Test
+    @DisplayName("GET /api/employees возвращает HTTP-ответ со статусом 200 и списком сотрудников")
+    void getAllEmployees_ReturnsValidResponseEntity() {
+        //given
+        List<EmployeeResponseDTO> employees = List.of(
+                new EmployeeResponseDTO(0L, "Иван", "Иванов", "ivanivanov@mail.ru", Role.MANAGER),
+                new EmployeeResponseDTO(1L, "Егор", "Сидоров", "egorsidorov@mail.ru", Role.MANAGER));
+        doReturn(employees).when(service).getAllEmployees();
+        //when
+        ResponseEntity<List<EmployeeResponseDTO>> responseEntity = controller.getAllEmployees();
+        //then
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(MediaType.APPLICATION_JSON, responseEntity.getHeaders().getContentType());
+        assertEquals(employees, responseEntity.getBody());
+    }
+
+    @Test
+    @DisplayName("GET /api/{id} возвращает HTTP-ответ со статусом 200 и сотрудником, если он есть")
+    void getEmployee_ReturnsValidResponseEntity() {
+        //given
+        EmployeeResponseDTO responseDTO = new EmployeeResponseDTO(2L, "Еблан", "Ебланович", "eblan@mail.ru", Role.ADMIN);
+        doReturn(responseDTO).when(service).getEmployee(2L);
+        //when
+        ResponseEntity<EmployeeResponseDTO> responseEntity = controller.getEmployee(2L);
+        //then
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(MediaType.APPLICATION_JSON, responseEntity.getHeaders().getContentType());
+        assertEquals(responseDTO, responseEntity.getBody());
+    }
+}
