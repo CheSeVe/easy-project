@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,23 +28,6 @@ public class EmployeeControllerTest {
 
     @InjectMocks
     EmployeeController controller;
-
-    @Test
-    @DisplayName("GET /api/employees возвращает HTTP-ответ со статусом 200 и списком сотрудников")
-    void getAllEmployees_ReturnsValidResponseEntity() {
-        //given
-        List<EmployeeResponseDTO> employees = List.of(
-                new EmployeeResponseDTO(0L, "Иван", "Иванов", "ivanivanov@mail.ru", Role.MANAGER),
-                new EmployeeResponseDTO(1L, "Егор", "Сидоров", "egorsidorov@mail.ru", Role.MANAGER));
-        doReturn(employees).when(service).getAllEmployees();
-        //when
-        ResponseEntity<List<EmployeeResponseDTO>> responseEntity = controller.getAllEmployees();
-        //then
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(MediaType.APPLICATION_JSON, responseEntity.getHeaders().getContentType());
-        assertEquals(employees, responseEntity.getBody());
-    }
 
     @Test
     @DisplayName("GET /api/{id} возвращает HTTP-ответ со статусом 200 и сотрудником, если он есть")

@@ -1,16 +1,17 @@
 package ru.cheseve.easyproject.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.cheseve.easyproject.dto.EmployeePatchRequestDTO;
 import ru.cheseve.easyproject.dto.EmployeeResponseDTO;
 import ru.cheseve.easyproject.dto.EmployeeRequestDTO;
 import ru.cheseve.easyproject.entity.Employee;
 import ru.cheseve.easyproject.exception.EmailAlreadyExistsException;
-import ru.cheseve.easyproject.exception.EntityNotFoundException;
-import ru.cheseve.easyproject.exception.RepositoryException;
 import ru.cheseve.easyproject.mapper.EmployeeMapper;
 import ru.cheseve.easyproject.repository.EmployeeRepository;
 
@@ -21,17 +22,17 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmployeeService {
     EmployeeRepository repository;
+    EmployeeMapper mapper;
 
-    public List<EmployeeResponseDTO> getAllEmployees() {
-        return repository.findAll().stream()
-                .map(EmployeeMapper::mapEntityToResponse)
-                .toList();
+    public Page<EmployeeResponseDTO> getAllEmployees(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toResponseDTO);
     }
 
     public EmployeeResponseDTO getEmployee(Long id) {
         Employee employee = getEmployeeOrThrowException(id);
 
-        return EmployeeMapper.mapEntityToResponse(employee);
+        return mapper.toResponseDTO(employee);
     }
 
     private Employee getEmployeeOrThrowException(Long id) {
@@ -43,8 +44,8 @@ public class EmployeeService {
     public EmployeeResponseDTO addEmployee(EmployeeRequestDTO requestDTO) {
         validateEmailUniqueness(requestDTO.email());
 
-        Employee employee = repository.save(EmployeeMapper.mapRequestToEntity(requestDTO));
-        return EmployeeMapper.mapEntityToResponse(employee);
+        Employee employee = repository.save(mapper.toEntity(requestDTO));
+        return mapper.toResponseDTO(employee);
     }
 
     private void validateEmailUniqueness(String email) {
@@ -55,14 +56,13 @@ public class EmployeeService {
     }
 
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
-
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
         validateEmailUniqueness(requestDTO.email(), existingEmployee);
 
-        Employee newEmployee = EmployeeMapper.mapRequestToEntity(requestDTO);
+        Employee newEmployee = mapper.toEntity(requestDTO);
         newEmployee.setId(existingEmployee.getId());
-        return EmployeeMapper.mapEntityToResponse(repository.save(newEmployee));
+        return mapper.toResponseDTO(repository.save(newEmployee));
     }
 
     private void validateEmailUniqueness(String email, Employee existingEmployee) {
@@ -93,14 +93,14 @@ public class EmployeeService {
         if (requestDTO.role() != null) {
             existingEmployee.setRole(requestDTO.role());
         }
-        return EmployeeMapper.mapEntityToResponse(repository.save(existingEmployee));
+        return mapper.toResponseDTO(repository.save(existingEmployee));
     }
 
     public void deleteEmployee(Long id) {
-        try {
-            repository.deleteById(id);
-        } catch (RepositoryException e) {
-            throw new EntityNotFoundException(e);
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException(String.format(
+                    "Employee with id %d does not exist", id));
         }
+        repository.deleteById(id);
     }
 }
