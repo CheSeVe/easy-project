@@ -1,9 +1,7 @@
-package ru.cheseve.easyproject.dto;
+package ru.cheseve.easyproject.dto.employee;
 
-import lombok.Builder;
 import ru.cheseve.easyproject.enums.Role;
 
-@Builder
 public record EmployeeResponseDTO(
         Long id,
         String name,

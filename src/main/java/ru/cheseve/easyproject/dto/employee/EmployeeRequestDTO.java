@@ -1,4 +1,4 @@
-package ru.cheseve.easyproject.dto;
+package ru.cheseve.easyproject.dto.employee;
 
 import jakarta.validation.constraints.*;
 import ru.cheseve.easyproject.enums.Role;

@@ -7,15 +7,17 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.cheseve.easyproject.dto.EmployeePatchRequestDTO;
-import ru.cheseve.easyproject.dto.EmployeeResponseDTO;
-import ru.cheseve.easyproject.dto.EmployeeRequestDTO;
+import org.springframework.transaction.annotation.Transactional;
+import ru.cheseve.easyproject.dto.PageResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeFilterDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeePatchRequestDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeRequestDTO;
 import ru.cheseve.easyproject.entity.Employee;
 import ru.cheseve.easyproject.exception.EmailAlreadyExistsException;
 import ru.cheseve.easyproject.mapper.EmployeeMapper;
 import ru.cheseve.easyproject.repository.EmployeeRepository;
-
-import java.util.List;
+import ru.cheseve.easyproject.specification.EmployeeSpecifications;
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +26,7 @@ public class EmployeeService {
     EmployeeRepository repository;
     EmployeeMapper mapper;
 
-    public Page<EmployeeResponseDTO> getAllEmployees(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(mapper::toResponseDTO);
-    }
-
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO getEmployee(Long id) {
         Employee employee = getEmployeeOrThrowException(id);
 
@@ -41,6 +39,16 @@ public class EmployeeService {
                         String.format("Employee with id %d does not exist", id)));
     }
 
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EmployeeResponseDTO> getAllEmployees(EmployeeFilterDTO filter, Pageable pageable) {
+        Page<EmployeeResponseDTO> employeePage = repository
+                .findAll(EmployeeSpecifications.withFilter(filter),pageable)
+                .map(mapper::toResponseDTO);
+
+        return PageResponseDTO.from(employeePage);
+    }
+
+    @Transactional
     public EmployeeResponseDTO addEmployee(EmployeeRequestDTO requestDTO) {
         validateEmailUniqueness(requestDTO.email());
 
@@ -55,14 +63,14 @@ public class EmployeeService {
         }
     }
 
+    @Transactional
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
-
         validateEmailUniqueness(requestDTO.email(), existingEmployee);
 
-        Employee newEmployee = mapper.toEntity(requestDTO);
-        newEmployee.setId(existingEmployee.getId());
-        return mapper.toResponseDTO(repository.save(newEmployee));
+        mapper.updateEmployeeFromDto(requestDTO, existingEmployee);
+
+        return mapper.toResponseDTO(existingEmployee);
     }
 
     private void validateEmailUniqueness(String email, Employee existingEmployee) {
@@ -74,6 +82,7 @@ public class EmployeeService {
         }
     }
 
+    @Transactional
     public EmployeeResponseDTO patchEmployee(Long id, EmployeePatchRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
@@ -83,7 +92,7 @@ public class EmployeeService {
         if (requestDTO.surname() != null && !requestDTO.surname().isBlank()) {
             existingEmployee.setSurname(requestDTO.surname());
         }
-        if (requestDTO.email() != null) {
+        if (requestDTO.email() != null && !requestDTO.email().isBlank()) {
             validateEmailUniqueness(requestDTO.email(), existingEmployee);
             existingEmployee.setEmail(requestDTO.email());
         }
@@ -93,14 +102,11 @@ public class EmployeeService {
         if (requestDTO.role() != null) {
             existingEmployee.setRole(requestDTO.role());
         }
-        return mapper.toResponseDTO(repository.save(existingEmployee));
+        return mapper.toResponseDTO(existingEmployee);
     }
-
+    @Transactional
     public void deleteEmployee(Long id) {
-        if (!repository.existsById(id)) {
-            throw new EntityNotFoundException(String.format(
-                    "Employee with id %d does not exist", id));
-        }
-        repository.deleteById(id);
+        Employee employee = getEmployeeOrThrowException(id);
+        repository.delete(employee);
     }
 }

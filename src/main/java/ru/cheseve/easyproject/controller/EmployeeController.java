@@ -6,16 +6,17 @@ import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.cheseve.easyproject.dto.EmployeePatchRequestDTO;
-import ru.cheseve.easyproject.dto.EmployeeResponseDTO;
-import ru.cheseve.easyproject.dto.EmployeeRequestDTO;
+import ru.cheseve.easyproject.dto.PageResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeFilterDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeePatchRequestDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeRequestDTO;
 import ru.cheseve.easyproject.enums.EmployeeSort;
 import ru.cheseve.easyproject.service.EmployeeService;
 
@@ -23,50 +24,51 @@ import ru.cheseve.easyproject.service.EmployeeService;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Validated
-@RequestMapping("/api")
+@RequestMapping("/api/employees")
 public class EmployeeController {
 
     EmployeeService employeeService;
 
-    @GetMapping("/employees")
-    public ResponseEntity<Page<EmployeeResponseDTO>> getAllEmployees(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-                @RequestParam(defaultValue = "ID_ASC") EmployeeSort sort
-    ) {
-        Pageable pageable = PageRequest.of(page, size, sort.getSortValue());
-        return ResponseEntity
-                .ok(employeeService.getAllEmployees(pageable));
-    }
-
-    @GetMapping("/employees/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<EmployeeResponseDTO> getEmployee(@PathVariable Long id) {
-        return ResponseEntity
-                .ok(employeeService.getEmployee(id));
+        return ResponseEntity.ok(employeeService.getEmployee(id));
     }
 
-    @PostMapping("/employees")
-    public ResponseEntity<EmployeeResponseDTO> addEmployee(@Valid @RequestBody EmployeeRequestDTO requestDTO) {
+    @GetMapping
+    public ResponseEntity<PageResponseDTO<EmployeeResponseDTO>> getAllEmployees(
+            @ModelAttribute EmployeeFilterDTO filter,
+            @RequestParam(defaultValue = "0")@Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "ID_ASC") EmployeeSort sort
+    ) {
+        Pageable pageable = PageRequest.of(page, size, sort.getSort());
+        return ResponseEntity.ok(employeeService.getAllEmployees(filter, pageable));
+    }
+
+    @PostMapping
+    public ResponseEntity<EmployeeResponseDTO> addEmployee(@RequestBody @Valid EmployeeRequestDTO requestDTO) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(employeeService.addEmployee(requestDTO));
     }
 
-    @PutMapping("/employees/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<EmployeeResponseDTO> putEmployee(@PathVariable Long id,
-                                                           @Valid @RequestBody EmployeeRequestDTO requestDTO) {
+                                                           @RequestBody @Valid EmployeeRequestDTO requestDTO) {
         return ResponseEntity.ok(employeeService.putEmployee(id, requestDTO));
     }
 
-    @PatchMapping("/employees/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<EmployeeResponseDTO> patchEmployee(@PathVariable Long id,
-                                                             @Valid @RequestBody EmployeePatchRequestDTO requestDTO) {
+                                                             @RequestBody @Valid EmployeePatchRequestDTO requestDTO) {
         return ResponseEntity.ok(employeeService.patchEmployee(id, requestDTO));
     }
 
-    @DeleteMapping("/employees/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

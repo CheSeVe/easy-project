@@ -7,14 +7,18 @@ import java.util.List;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExceptionResponse {
-    @NonNull
+
     String message;
     List<FieldValidationError> errors;
+
+    public ExceptionResponse(String message) {
+        this.message = message;
+    }
 
     public record FieldValidationError(
             String field,

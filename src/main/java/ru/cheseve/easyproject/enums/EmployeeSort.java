@@ -14,5 +14,5 @@ public enum EmployeeSort {
     SURNAME_ASC(Sort.by(Sort.Direction.ASC, "surname")),
     ROLE_ASC(Sort.by(Sort.Direction.ASC, "role"));
 
-    private final Sort sortValue;
+    private final Sort sort;
 }
