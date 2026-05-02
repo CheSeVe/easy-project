@@ -1,6 +1,5 @@
 package ru.cheseve.easyproject.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +14,7 @@ import ru.cheseve.easyproject.dto.employee.EmployeeResponseDTO;
 import ru.cheseve.easyproject.dto.employee.EmployeeRequestDTO;
 import ru.cheseve.easyproject.entity.Employee;
 import ru.cheseve.easyproject.exception.EmailAlreadyExistsException;
+import ru.cheseve.easyproject.exception.EmployeeNotFoundException;
 import ru.cheseve.easyproject.mapper.EmployeeMapper;
 import ru.cheseve.easyproject.repository.EmployeeRepository;
 import ru.cheseve.easyproject.specification.EmployeeSpecifications;
@@ -31,12 +31,6 @@ public class EmployeeService {
         Employee employee = getEmployeeOrThrowException(id);
 
         return mapper.toResponseDTO(employee);
-    }
-
-    private Employee getEmployeeOrThrowException(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        String.format("Employee with id %d does not exist", id)));
     }
 
     @Transactional(readOnly = true)
@@ -56,13 +50,6 @@ public class EmployeeService {
         return mapper.toResponseDTO(employee);
     }
 
-    private void validateEmailUniqueness(String email) {
-        if (repository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(String.format(
-                    "Employee with email %s already exists", email));
-        }
-    }
-
     @Transactional
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
@@ -73,26 +60,17 @@ public class EmployeeService {
         return mapper.toResponseDTO(existingEmployee);
     }
 
-    private void validateEmailUniqueness(String email, Employee existingEmployee) {
-        if (email != null
-                && !email.equals(existingEmployee.getEmail())
-                && repository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(String.format(
-                    "Employee with email %s already exists", email));
-        }
-    }
-
     @Transactional
     public EmployeeResponseDTO patchEmployee(Long id, EmployeePatchRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
-        if (requestDTO.name() != null && !requestDTO.name().isBlank()) {
+        if (requestDTO.name() != null) {
             existingEmployee.setName(requestDTO.name());
         }
-        if (requestDTO.surname() != null && !requestDTO.surname().isBlank()) {
+        if (requestDTO.surname() != null) {
             existingEmployee.setSurname(requestDTO.surname());
         }
-        if (requestDTO.email() != null && !requestDTO.email().isBlank()) {
+        if (requestDTO.email() != null) {
             validateEmailUniqueness(requestDTO.email(), existingEmployee);
             existingEmployee.setEmail(requestDTO.email());
         }
@@ -104,9 +82,32 @@ public class EmployeeService {
         }
         return mapper.toResponseDTO(existingEmployee);
     }
+
     @Transactional
     public void deleteEmployee(Long id) {
         Employee employee = getEmployeeOrThrowException(id);
         repository.delete(employee);
+    }
+
+    private Employee getEmployeeOrThrowException(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException(
+                        String.format("Employee with id %d does not exist", id)));
+    }
+
+    private void validateEmailUniqueness(String email) {
+        if (repository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(String.format(
+                    "Employee with email %s already exists", email));
+        }
+    }
+
+    private void validateEmailUniqueness(String email, Employee existingEmployee) {
+        if (email != null
+                && !email.equals(existingEmployee.getEmail())
+                && repository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(String.format(
+                    "Employee with email %s already exists", email));
+        }
     }
 }

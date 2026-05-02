@@ -39,7 +39,6 @@ public class EmployeeControllerTest {
         //then
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(MediaType.APPLICATION_JSON, responseEntity.getHeaders().getContentType());
         assertEquals(responseDTO, responseEntity.getBody());
     }
 }

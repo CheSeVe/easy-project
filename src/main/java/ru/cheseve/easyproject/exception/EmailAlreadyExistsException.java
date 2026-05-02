@@ -1,6 +1,6 @@
 package ru.cheseve.easyproject.exception;
 
-public class EmailAlreadyExistsException extends RuntimeException{
+public class EmailAlreadyExistsException extends AlreadyExistsException {
     public EmailAlreadyExistsException(String message) {
         super(message);
     }

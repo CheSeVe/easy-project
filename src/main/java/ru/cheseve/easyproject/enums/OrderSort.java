@@ -8,7 +8,9 @@ import org.springframework.data.domain.Sort;
 @RequiredArgsConstructor
 public enum OrderSort {
     CREATED_ASC(Sort.by(Sort.Direction.ASC, "createdAt")),
-    CREATED_DESC(Sort.by(Sort.Direction.DESC, "createdAt"));
+    CREATED_DESC(Sort.by(Sort.Direction.DESC, "createdAt")),
+    ITEMS_COUNT_ASC(Sort.by(Sort.Direction.ASC, "itemsCount")),
+    ITEMS_COUNT_DESC(Sort.by(Sort.Direction.DESC, "itemsCount"));
 
     private final Sort sort;
 }

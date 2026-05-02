@@ -5,9 +5,18 @@ import jakarta.validation.constraints.NotBlank;
 import ru.cheseve.easyproject.validation.ValidPhoneNumber;
 
 public record CustomerRequestDTO(
-        @NotBlank String name,
-        @NotBlank String surname,
-        @NotBlank @Email String email,
-        @NotBlank @ValidPhoneNumber String phoneNumber
+        @NotBlank
+        String name,
+
+        @NotBlank
+        String surname,
+
+        @NotBlank
+        @Email
+        String email,
+
+        @NotBlank
+        @ValidPhoneNumber
+        String phoneNumber
 ) {
 }

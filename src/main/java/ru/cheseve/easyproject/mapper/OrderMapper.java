@@ -6,6 +6,7 @@ import ru.cheseve.easyproject.dto.order.OrderRequestDTO;
 import ru.cheseve.easyproject.dto.order.OrderResponseDTO;
 import ru.cheseve.easyproject.dto.order.OrderWithCustomerIdResponseDTO;
 import ru.cheseve.easyproject.dto.order.OrderWithCustomerResponseDTO;
+import ru.cheseve.easyproject.dto.orderItem.OrderItemsResponseDTO;
 import ru.cheseve.easyproject.entity.Order;
 
 @Mapper(componentModel = "spring", uses = CustomerMapper.class)

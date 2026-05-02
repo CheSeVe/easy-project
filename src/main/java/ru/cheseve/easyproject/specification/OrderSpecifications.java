@@ -1,14 +1,17 @@
 package ru.cheseve.easyproject.specification;
 
+import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 import ru.cheseve.easyproject.dto.order.OrderFilterDTO;
 import ru.cheseve.easyproject.entity.Order;
+import ru.cheseve.easyproject.entity.OrderItem;
 import ru.cheseve.easyproject.enums.Status;
 
 import java.time.Instant;
 
 public final class OrderSpecifications {
-    private OrderSpecifications() {}
+    private OrderSpecifications() {
+    }
 
     public static Specification<Order> hasStatus(Status status) {
         return status == null
@@ -31,6 +34,17 @@ public final class OrderSpecifications {
                 cb.lessThanOrEqualTo(root.get("createdAt"), to);
     }
 
+    public static Specification<Order> containsProduct(Long productId) {
+        return productId == null
+                ? Specification.unrestricted()
+                : (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Order, OrderItem> items = root.join("items");
+            return cb.equal(items.join("product").get("id"), productId);
+        };
+    }
+
     public static Specification<Order> withFilter(OrderFilterDTO filter) {
         if (filter == null) {
             return Specification.unrestricted();
@@ -39,6 +53,7 @@ public final class OrderSpecifications {
         return Specification
                 .where(hasStatus(filter.status()))
                 .and(createdFrom(filter.createdFrom()))
-                .and(createdTo(filter.createdTo()));
+                .and(createdTo(filter.createdTo()))
+                .and(containsProduct(filter.productId()));
     }
 }

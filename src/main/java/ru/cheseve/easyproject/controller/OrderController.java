@@ -26,9 +26,9 @@ public class OrderController {
 
     OrderService orderService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderWithCustomerResponseDTO> getOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderWithCustomer(id));
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderWithCustomerResponseDTO> getOrder(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderWithCustomer(orderId));
     }
 
     @GetMapping
@@ -50,16 +50,16 @@ public class OrderController {
                 .body(orderService.addOrder(requestDTO));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{orderId}")
     public ResponseEntity<OrderResponseDTO> changeOrderStatus(
-            @PathVariable Long id,
+            @PathVariable Long oderId,
             @RequestBody @Valid OrderStatusRequestDTO requestDTO) {
-        return ResponseEntity.ok(orderService.changeOrderStatus(id, requestDTO));
+        return ResponseEntity.ok(orderService.changeOrderStatus(oderId, requestDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long oderId) {
+        orderService.deleteOrder(oderId);
         return ResponseEntity
                 .noContent()
                 .build();

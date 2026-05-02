@@ -9,23 +9,28 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "customer")
+@Entity
+@Table(name = "customer")
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
     Long id;
-    @Column(name = "name")
+
+    @Column(name = "name", nullable = false)
     String name;
-    @Column(name = "surname")
+
+    @Column(name = "surname", nullable = false)
     String surname;
-    @Column(name = "email", unique = true)
+
+    @Column(name = "email", nullable = false, unique = true)
     String email;
-    @Column(name = "phone_number", unique = true)
+
+    @Column(name = "phone_number", nullable = false, unique = true)
     String phoneNumber;
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.PERSIST)
     List<Order> orders = new ArrayList<>();
 }

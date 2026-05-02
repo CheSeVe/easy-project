@@ -10,7 +10,10 @@ public record OrderFilterDTO(
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         Instant createdFrom,
+
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-        Instant createdTo
+        Instant createdTo,
+
+        Long productId
 ) {
 }

@@ -3,7 +3,7 @@ package ru.cheseve.easyproject.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class NotBlankOrNullValidator implements ConstraintValidator<NotBlankOrNull, String> {
+public class NullOrNotBlankValidator implements ConstraintValidator<NullOrNotBlank, String> {
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

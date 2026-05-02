@@ -1,6 +1,6 @@
 package ru.cheseve.easyproject.exception;
 
-public class PhoneNumberAlreadyExistsException extends RuntimeException {
+public class PhoneNumberAlreadyExistsException extends AlreadyExistsException {
 
     public PhoneNumberAlreadyExistsException(String message) {
         super(message);

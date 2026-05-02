@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import ru.cheseve.easyproject.enums.Status;
 
 public record OrderRequestDTO(
-        @NotNull Status status,
-        @NotNull Long customerId) {
+        @NotNull
+        Status status,
+
+        @NotNull
+        Long customerId) {
 }

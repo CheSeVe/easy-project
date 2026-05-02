@@ -7,24 +7,24 @@ import ru.cheseve.easyproject.enums.Role;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "employee")
+@Entity
+@Table(name = "employee")
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
     Long id;
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     String name;
-    @Column(name = "surname")
+    @Column(name = "surname", nullable = false)
     String surname;
-    @Column(name = "email", unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     String email;
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     String password;
     @Enumerated(EnumType.STRING)
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     Role role;
 }
