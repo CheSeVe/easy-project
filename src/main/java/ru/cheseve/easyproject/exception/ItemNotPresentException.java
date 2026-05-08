@@ -1,6 +1,6 @@
 package ru.cheseve.easyproject.exception;
 
-public class ItemNotPresentException extends RuntimeException {
+public class ItemNotPresentException extends NotFoundException {
     public ItemNotPresentException(String message) {
         super(message);
     }

@@ -52,14 +52,14 @@ public class OrderController {
 
     @PatchMapping("/{orderId}")
     public ResponseEntity<OrderResponseDTO> changeOrderStatus(
-            @PathVariable Long oderId,
+            @PathVariable Long orderId,
             @RequestBody @Valid OrderStatusRequestDTO requestDTO) {
-        return ResponseEntity.ok(orderService.changeOrderStatus(oderId, requestDTO));
+        return ResponseEntity.ok(orderService.changeOrderStatus(orderId, requestDTO));
     }
 
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long oderId) {
-        orderService.deleteOrder(oderId);
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long orderId) {
+        orderService.deleteOrder(orderId);
         return ResponseEntity
                 .noContent()
                 .build();
