@@ -3,84 +3,71 @@ package ru.cheseve.easyproject.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.cheseve.easyproject.dto.EmployeePatchRequestDTO;
-import ru.cheseve.easyproject.dto.EmployeeResponseDTO;
-import ru.cheseve.easyproject.dto.EmployeeRequestDTO;
+import org.springframework.transaction.annotation.Transactional;
+import ru.cheseve.easyproject.dto.PageResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeFilterDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeePatchRequestDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeResponseDTO;
+import ru.cheseve.easyproject.dto.employee.EmployeeRequestDTO;
 import ru.cheseve.easyproject.entity.Employee;
 import ru.cheseve.easyproject.exception.EmailAlreadyExistsException;
-import ru.cheseve.easyproject.exception.EntityNotFoundException;
-import ru.cheseve.easyproject.exception.RepositoryException;
+import ru.cheseve.easyproject.exception.EmployeeNotFoundException;
 import ru.cheseve.easyproject.mapper.EmployeeMapper;
 import ru.cheseve.easyproject.repository.EmployeeRepository;
-
-import java.util.List;
+import ru.cheseve.easyproject.specification.EmployeeSpecifications;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmployeeService {
     EmployeeRepository repository;
+    EmployeeMapper mapper;
 
-    public List<EmployeeResponseDTO> getAllEmployees() {
-        return repository.findAll().stream()
-                .map(EmployeeMapper::mapEntityToResponse)
-                .toList();
-    }
-
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO getEmployee(Long id) {
         Employee employee = getEmployeeOrThrowException(id);
 
-        return EmployeeMapper.mapEntityToResponse(employee);
+        return mapper.toResponseDTO(employee);
     }
 
-    private Employee getEmployeeOrThrowException(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        String.format("Employee with id %d does not exist", id)));
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EmployeeResponseDTO> getAllEmployees(EmployeeFilterDTO filter, Pageable pageable) {
+        Page<EmployeeResponseDTO> employeePage = repository
+                .findAll(EmployeeSpecifications.withFilter(filter),pageable)
+                .map(mapper::toResponseDTO);
+
+        return PageResponseDTO.from(employeePage);
     }
 
+    @Transactional
     public EmployeeResponseDTO addEmployee(EmployeeRequestDTO requestDTO) {
         validateEmailUniqueness(requestDTO.email());
 
-        Employee employee = repository.save(EmployeeMapper.mapRequestToEntity(requestDTO));
-        return EmployeeMapper.mapEntityToResponse(employee);
+        Employee employee = repository.save(mapper.toEntity(requestDTO));
+        return mapper.toResponseDTO(employee);
     }
 
-    private void validateEmailUniqueness(String email) {
-        if (repository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(String.format(
-                    "Employee with email %s already exists", email));
-        }
-    }
-
+    @Transactional
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
-
         Employee existingEmployee = getEmployeeOrThrowException(id);
-
         validateEmailUniqueness(requestDTO.email(), existingEmployee);
 
-        Employee newEmployee = EmployeeMapper.mapRequestToEntity(requestDTO);
-        newEmployee.setId(existingEmployee.getId());
-        return EmployeeMapper.mapEntityToResponse(repository.save(newEmployee));
+        mapper.updateEmployeeFromDto(requestDTO, existingEmployee);
+
+        return mapper.toResponseDTO(existingEmployee);
     }
 
-    private void validateEmailUniqueness(String email, Employee existingEmployee) {
-        if (email != null
-                && !email.equals(existingEmployee.getEmail())
-                && repository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(String.format(
-                    "Employee with email %s already exists", email));
-        }
-    }
-
+    @Transactional
     public EmployeeResponseDTO patchEmployee(Long id, EmployeePatchRequestDTO requestDTO) {
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
-        if (requestDTO.name() != null && !requestDTO.name().isBlank()) {
+        if (requestDTO.name() != null) {
             existingEmployee.setName(requestDTO.name());
         }
-        if (requestDTO.surname() != null && !requestDTO.surname().isBlank()) {
+        if (requestDTO.surname() != null) {
             existingEmployee.setSurname(requestDTO.surname());
         }
         if (requestDTO.email() != null) {
@@ -93,14 +80,34 @@ public class EmployeeService {
         if (requestDTO.role() != null) {
             existingEmployee.setRole(requestDTO.role());
         }
-        return EmployeeMapper.mapEntityToResponse(repository.save(existingEmployee));
+        return mapper.toResponseDTO(existingEmployee);
     }
 
+    @Transactional
     public void deleteEmployee(Long id) {
-        try {
-            repository.deleteById(id);
-        } catch (RepositoryException e) {
-            throw new EntityNotFoundException(e);
+        Employee employee = getEmployeeOrThrowException(id);
+        repository.delete(employee);
+    }
+
+    private Employee getEmployeeOrThrowException(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException(
+                        String.format("Employee with id %d does not exist", id)));
+    }
+
+    private void validateEmailUniqueness(String email) {
+        if (repository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(String.format(
+                    "Employee with email %s already exists", email));
+        }
+    }
+
+    private void validateEmailUniqueness(String email, Employee existingEmployee) {
+        if (email != null
+                && !email.equals(existingEmployee.getEmail())
+                && repository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException(String.format(
+                    "Employee with email %s already exists", email));
         }
     }
 }
