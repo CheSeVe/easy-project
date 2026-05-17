@@ -19,7 +19,7 @@ public class PhoneNumberValidator implements ConstraintValidator<ValidPhoneNumbe
         if (!value.matches(VALID_PHONE_REGEX)) {
             setValidationMessage(
                     context,
-                    "Phone number must be in format +123456789"
+                    "Phone number must be in format +79001234567"
             );
             return false;
         }

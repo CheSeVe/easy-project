@@ -3,6 +3,7 @@ package ru.cheseve.easyproject.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.cheseve.easyproject.dto.orderItem.OrderItemReplacement;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -34,12 +36,14 @@ public class OrderItemService {
 
     @Transactional(readOnly = true)
     public OrderItemsResponseDTO getItems(Long orderId) {
+        log.debug("getItems orderId={}", orderId);
         Order order = getOrderWithItemsAndProductsOrThrowException(orderId);
         return orderItemMapper.toOrderItemsResponseDTO(order);
     }
 
     @Transactional
     public OrderItemsResponseDTO putItems(Long orderId, OrderItemsRequestDTO requestDTO) {
+        log.debug("putItems orderId={}", orderId);
         Order order = getOrderWithItemsAndProductsOrThrowException(orderId);
 
         Map<Long, OrderItemReplacement> replacementByProductId = toReplacementMap(
@@ -53,6 +57,7 @@ public class OrderItemService {
 
     @Transactional
     public OrderItemsResponseDTO patchItems(Long orderId, OrderItemsRequestDTO requestDTO) {
+        log.debug("patchItems orderId={}", orderId);
         Order order = getOrderWithItemsAndProductsOrThrowException(orderId);
 
         Map<Long, Product> requestProductsById = getProductsByIdsOrThrowException(requestDTO.items());
@@ -69,6 +74,7 @@ public class OrderItemService {
 
     @Transactional
     public void deleteItem(Long orderId, Long productId) {
+        log.debug("deleteItem, orderId={}, productId={}", orderId, productId);
         Order order = getOrderWithItemsOrThrowException(orderId);
         order.removeItem(productId);
     }

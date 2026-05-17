@@ -3,6 +3,7 @@ package ru.cheseve.easyproject.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,7 @@ import ru.cheseve.easyproject.repository.CustomerRepository;
 import ru.cheseve.easyproject.repository.OrderRepository;
 import ru.cheseve.easyproject.specification.OrderSpecifications;
 
-import java.time.Instant;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -30,6 +30,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderWithCustomerResponseDTO getOrderWithCustomer(Long id) {
+        log.debug("getOrderWithCustomer id={}", id);
         Order order = getOrderWithCustomerOrThrowException(id);
 
         return orderMapper.toResponseWithCustomer(order);
@@ -39,6 +40,7 @@ public class OrderService {
     public PageResponseDTO<OrderWithCustomerIdResponseDTO> getAllOrders(
             OrderFilterDTO filter,
             Pageable pageable) {
+        log.debug("getAllOrders page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
         Page<OrderWithCustomerIdResponseDTO> orderPage = orderRepository
                 .findAll(OrderSpecifications.withFilter(filter), pageable)
                 .map(orderMapper::toResponseWithCustomerId);
@@ -48,18 +50,20 @@ public class OrderService {
 
     @Transactional
     public OrderWithCustomerIdResponseDTO addOrder(OrderRequestDTO requestDTO) {
+        log.debug("addOrder started");
         Customer customer = getCustomerOrThrowException(requestDTO.customerId());
 
         Order order = orderMapper.toEntity(requestDTO);
         order.setCustomer(customer);
 
         Order savedOrder = orderRepository.save(order);
-
+        log.debug("addOrder - created id={}", savedOrder.getId());
         return orderMapper.toResponseWithCustomerId(savedOrder);
     }
 
     @Transactional
     public OrderResponseDTO changeOrderStatus(Long id, OrderStatusRequestDTO requestDTO) {
+        log.debug("changeOrderStatus id={}, status={}", id, requestDTO.status());
         Order order = getOrderOrThrowException(id);
         order.setStatus(requestDTO.status());
 
@@ -68,6 +72,7 @@ public class OrderService {
 
     @Transactional
     public void deleteOrder(Long id) {
+        log.debug("deleteOrder id={}", id);
         Order order = getOrderOrThrowException(id);
         orderRepository.delete(order);
     }
