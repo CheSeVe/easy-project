@@ -1,6 +1,5 @@
 package ru.cheseve.easyproject.advice;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

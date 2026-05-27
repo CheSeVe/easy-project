@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
