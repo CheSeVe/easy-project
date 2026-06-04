@@ -1,7 +1,7 @@
 package ru.cheseve.easyproject.advice;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -19,16 +19,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class DefaultExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ExceptionResponse> handleNotFound(NotFoundException ex) {
+        log.warn(ex.getMessage());
         ExceptionResponse exceptionResponse = new ExceptionResponse(ex.getMessage());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ExceptionResponse> handleConflict(AlreadyExistsException ex) {
+        log.warn(ex.getMessage());
         ExceptionResponse exceptionResponse = new ExceptionResponse(ex.getMessage());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.CONFLICT);
     }
@@ -43,6 +46,8 @@ public class DefaultExceptionHandler {
                                 fieldError.getField(),
                                 fieldError.getDefaultMessage()))
                 .toList();
+
+        log.info("Validation errors: {}", errors);
         ExceptionResponse exceptionResponse = new ExceptionResponse("Validation failed");
         exceptionResponse.setErrors(errors);
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
@@ -50,18 +55,21 @@ public class DefaultExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ExceptionResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        log.error("Illegal argument", ex);
         ExceptionResponse exceptionResponse = new ExceptionResponse(ex.getMessage());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        log.error(ex.getMessage());
         ExceptionResponse exceptionResponse = new ExceptionResponse(ex.getMessage());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ExceptionResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("invalid request body, cause: {}", ex.getMostSpecificCause().getMessage());
         return findCause(ex, InvalidFormatException.class)
                 .filter(cause -> cause.getTargetType() != null)
                 .filter(cause -> cause.getTargetType().isEnum())

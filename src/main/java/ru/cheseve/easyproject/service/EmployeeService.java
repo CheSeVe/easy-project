@@ -3,6 +3,7 @@ package ru.cheseve.easyproject.service;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import ru.cheseve.easyproject.mapper.EmployeeMapper;
 import ru.cheseve.easyproject.repository.EmployeeRepository;
 import ru.cheseve.easyproject.specification.EmployeeSpecifications;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -28,13 +30,15 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public EmployeeResponseDTO getEmployee(Long id) {
-        Employee employee = getEmployeeOrThrowException(id);
+        log.debug("getEmployee id={}", id);
 
+        Employee employee = getEmployeeOrThrowException(id);
         return mapper.toResponseDTO(employee);
     }
 
     @Transactional(readOnly = true)
     public PageResponseDTO<EmployeeResponseDTO> getAllEmployees(EmployeeFilterDTO filter, Pageable pageable) {
+        log.debug("getAllEmployees page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
         Page<EmployeeResponseDTO> employeePage = repository
                 .findAll(EmployeeSpecifications.withFilter(filter),pageable)
                 .map(mapper::toResponseDTO);
@@ -44,14 +48,17 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeResponseDTO addEmployee(EmployeeRequestDTO requestDTO) {
+        log.debug("addEmployee started");
         validateEmailUniqueness(requestDTO.email());
 
         Employee employee = repository.save(mapper.toEntity(requestDTO));
+        log.debug("addEmployee - created id={}", employee.getId());
         return mapper.toResponseDTO(employee);
     }
 
     @Transactional
     public EmployeeResponseDTO putEmployee(Long id, EmployeeRequestDTO requestDTO) {
+        log.debug("putEmployee id={}", id);
         Employee existingEmployee = getEmployeeOrThrowException(id);
         validateEmailUniqueness(requestDTO.email(), existingEmployee);
 
@@ -62,6 +69,7 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeResponseDTO patchEmployee(Long id, EmployeePatchRequestDTO requestDTO) {
+        log.debug("patchEmployee id={}", id);
         Employee existingEmployee = getEmployeeOrThrowException(id);
 
         if (requestDTO.name() != null) {
@@ -85,6 +93,7 @@ public class EmployeeService {
 
     @Transactional
     public void deleteEmployee(Long id) {
+        log.debug("deleteEmployee id={}", id);
         Employee employee = getEmployeeOrThrowException(id);
         repository.delete(employee);
     }
