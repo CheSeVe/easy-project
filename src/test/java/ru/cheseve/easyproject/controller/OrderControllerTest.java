@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.hasSize;
 class OrderControllerTest {
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Test
     void getOrder_ExistingId_ReturnsOrderWithCustomer() throws Exception {

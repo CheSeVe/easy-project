@@ -60,7 +60,7 @@ public class EmployeeController {
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
             @RequestParam(defaultValue = "ID_ASC") EmployeeSort sort
     ) {
-        log.info("GET /api/employees/, page={}, size={}, sort={}, filtered={}",
+        log.info("GET /api/employees, page={}, size={}, sort={}, filtered={}",
                 page,
                 size,
                 sort,

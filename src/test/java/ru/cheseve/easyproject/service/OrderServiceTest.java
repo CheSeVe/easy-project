@@ -1,5 +1,7 @@
 package ru.cheseve.easyproject.service;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,10 +27,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doReturn;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
     @Mock
@@ -63,7 +65,6 @@ class OrderServiceTest {
 
     @Test
     void getOrderWithCustomer_ExistingId_ReturnsOrderWithCustomerResponseDTO() {
-        // given
         var expectedResponse = new OrderWithCustomerResponseDTO(
                 order.getId(),
                 order.getStatus(),
@@ -78,25 +79,30 @@ class OrderServiceTest {
         );
         doReturn(Optional.of(order)).when(orderRepository).findWithCustomerById(1L);
         doReturn(expectedResponse).when(orderMapper).toResponseWithCustomer(order);
-        // when
+
         var result = service.getOrderWithCustomer(1L);
-        // then
+
         assertEquals(expectedResponse, result);
+        verify(orderRepository).findWithCustomerById(1L);
+        verify(orderMapper).toResponseWithCustomer(order);
+        verifyNoMoreInteractions(orderRepository, orderMapper);
     }
 
     @Test
     void getOrderWithCustomer_NotExistingId_ThrowsNotFound() {
-        // given
+
         Long id = 99L;
         doReturn(Optional.empty()).when(orderRepository).findWithCustomerById(id);
-        // then
+
         var exception = assertThrows(OrderNotFoundException.class, () -> service.getOrderWithCustomer(id));
         assertEquals("Order with id 99 does not exist", exception.getMessage());
+        verify(orderRepository).findWithCustomerById(id);
+        verifyNoMoreInteractions(orderRepository);
+        verifyNoInteractions(orderMapper);
     }
 
     @Test
     void getAllOrders_ReturnsPageResponseDTO() {
-        //given
         var filter = new OrderFilterDTO(null, null, null, null);
         var pageable = PageRequest.of(0, 10);
         var page = new PageImpl<>(List.of(order), pageable, 1);
@@ -108,16 +114,18 @@ class OrderServiceTest {
 
         doReturn(page).when(orderRepository).findAll(any(Specification.class), eq(pageable));
         doReturn(expectedResponse).when(orderMapper).toResponseWithCustomerId(order);
-        //when
+
         var result = service.getAllOrders(filter, pageable);
-        //then
+
         assertEquals(1, result.content().size());
-        assertEquals(expectedResponse, result.content().get(0));
+        assertEquals(expectedResponse, result.content().getFirst());
+        verify(orderRepository).findAll(any(Specification.class), eq(pageable));
+        verify(orderMapper).toResponseWithCustomerId(order);
+        verifyNoMoreInteractions(orderMapper, orderRepository);
     }
 
     @Test
     void addOrder_ExistingCustomerId_ReturnsResponse() {
-        //given
         var requestDTO = new OrderRequestDTO(Status.NEW, 2L);
         var expectedResponse = new OrderWithCustomerIdResponseDTO(
                 1L,
@@ -130,64 +138,77 @@ class OrderServiceTest {
                 .when(orderRepository)
                 .save(argThat(o -> o.getCustomer().equals(customer)));
         doReturn(expectedResponse).when(orderMapper).toResponseWithCustomerId(order);
-        //when
+
         var result = service.addOrder(requestDTO);
-        //then
+
         assertEquals(expectedResponse, result);
+        verify(customerRepository).findById(2L);
+        verify(orderMapper).toEntity(requestDTO);
+        verify(orderRepository).save(argThat(o -> o.getCustomer().equals(customer)));
+        verify(orderMapper).toResponseWithCustomerId(order);
+        verifyNoMoreInteractions(customerRepository, orderMapper, orderRepository);
     }
 
     @Test
     void addOrder_NotExistingCustomerId_ThrowsNotFound() {
-        //given
         var requestDTO = new OrderRequestDTO(Status.NEW, 2L);
         doReturn(Optional.empty()).when(customerRepository).findById(2L);
-        //then
+
         var exception = assertThrows(CustomerNotFoundException.class, () -> service.addOrder(requestDTO));
         assertEquals("Customer with id 2 does not exist", exception.getMessage());
+        verify(customerRepository).findById(2L);
+        verifyNoMoreInteractions(customerRepository);
+        verifyNoInteractions(orderMapper, orderRepository);
     }
 
     @Test
     void changeOrderStatus_ExistingId_ReturnsResponse() {
-        //given
         var requestDTO = new OrderStatusRequestDTO(Status.CANCELED);
         var expectedResponse = new OrderResponseDTO(order.getId(), Status.CANCELED, order.getCreatedAt());
         doReturn(Optional.of(order)).when(orderRepository).findById(1L);
         doReturn(expectedResponse)
                 .when(orderMapper).toResponse(argThat(o -> o.getStatus() == Status.CANCELED));
-        //when
+
         var result = service.changeOrderStatus(1L, requestDTO);
-        //then
+
         assertEquals(expectedResponse, result);
+        verify(orderRepository).findById(1L);
+        verify(orderMapper).toResponse(argThat(o -> o.getStatus() == Status.CANCELED));
+        verifyNoMoreInteractions(orderRepository, orderMapper);
     }
 
     @Test
     void changeOrderStatus_NotExistingId_ThrowsNotFound() {
-        //given
         var requestDTO = new OrderStatusRequestDTO(Status.CANCELED);
         doReturn(Optional.empty()).when(orderRepository).findById(1L);
-        //then
+
         var exception = assertThrows(OrderNotFoundException.class,() -> service.changeOrderStatus(1L, requestDTO));
         assertEquals("Order with id 1 does not exist", exception.getMessage());
+        verify(orderRepository).findById(1L);
+        verifyNoMoreInteractions(orderRepository);
+        verifyNoMoreInteractions(orderMapper);
     }
 
     @Test
     void deleteOrder_ExistingId_Deletes() {
-        // given
         doReturn(Optional.of(order)).when(orderRepository).findById(1L);
-        // when
+
         service.deleteOrder(1L);
-        // then
+
+        verify(orderRepository).findById(1L);
         verify(orderRepository).delete(order);
+        verifyNoMoreInteractions(orderRepository);
+        verifyNoInteractions(customerRepository, orderMapper);
     }
 
     @Test
     void deleteOrder_NotExistingId_ThrowsNotFound() {
-        //given
         doReturn(Optional.empty()).when(orderRepository).findById(1L);
-        // then
+
         var exception = assertThrows(OrderNotFoundException.class, () -> service.deleteOrder(1L));
         assertEquals("Order with id 1 does not exist", exception.getMessage());
+        verify(orderRepository).findById(1L);
+        verifyNoMoreInteractions(orderRepository);
+        verifyNoInteractions(customerRepository, orderMapper);
     }
-
-
 }

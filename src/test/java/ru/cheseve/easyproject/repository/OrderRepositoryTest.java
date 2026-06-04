@@ -23,7 +23,7 @@ executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 class OrderRepositoryTest {
 
     @Autowired
-    OrderRepository orderRepository;
+    private OrderRepository orderRepository;
 
     @Test
     void detachCustomerFromOrders_Detaches() {
