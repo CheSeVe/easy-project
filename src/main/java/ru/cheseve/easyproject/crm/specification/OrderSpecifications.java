@@ -1,0 +1,59 @@
+package ru.cheseve.easyproject.crm.specification;
+
+import jakarta.persistence.criteria.Join;
+import org.springframework.data.jpa.domain.Specification;
+import ru.cheseve.easyproject.crm.dto.order.OrderFilterDTO;
+import ru.cheseve.easyproject.crm.entity.Order;
+import ru.cheseve.easyproject.crm.entity.OrderItem;
+import ru.cheseve.easyproject.crm.enums.Status;
+
+import java.time.Instant;
+
+public final class OrderSpecifications {
+    private OrderSpecifications() {
+    }
+
+    public static Specification<Order> hasStatus(Status status) {
+        return status == null
+                ? Specification.unrestricted()
+                : (root, query, cb) ->
+                cb.equal(root.get("status"), status);
+    }
+
+    public static Specification<Order> createdFrom(Instant from) {
+        return from == null
+                ? Specification.unrestricted()
+                : (root, query, cb) ->
+                cb.greaterThanOrEqualTo(root.get("createdAt"), from);
+    }
+
+    public static Specification<Order> createdTo(Instant to) {
+        return to == null
+                ? Specification.unrestricted()
+                : (root, query, cb) ->
+                cb.lessThanOrEqualTo(root.get("createdAt"), to);
+    }
+
+    public static Specification<Order> containsProduct(Long productId) {
+        return productId == null
+                ? Specification.unrestricted()
+                : (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Order, OrderItem> items = root.join("items");
+            return cb.equal(items.join("product").get("id"), productId);
+        };
+    }
+
+    public static Specification<Order> withFilter(OrderFilterDTO filter) {
+        if (filter == null) {
+            return Specification.unrestricted();
+        }
+
+        return Specification
+                .where(hasStatus(filter.status()))
+                .and(createdFrom(filter.createdFrom()))
+                .and(createdTo(filter.createdTo()))
+                .and(containsProduct(filter.productId()));
+    }
+}
