@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.cheseve.easyproject.dto.ExceptionResponse;
 import ru.cheseve.easyproject.exception.*;
+import ru.cheseve.easyproject.integration.subscriprion.exception.SubsClientException;
 import tools.jackson.databind.exc.InvalidFormatException;
 import tools.jackson.core.JacksonException;
 
@@ -65,6 +66,14 @@ public class DefaultExceptionHandler {
         log.error(ex.getMessage());
         ExceptionResponse exceptionResponse = new ExceptionResponse(ex.getMessage());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SubsClientException.class)
+    public ResponseEntity<ExceptionResponse> handleSubsClientClient(SubsClientException ex) {
+        log.warn("Subscription service integration failed: {}", ex.getMessage(), ex);
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ExceptionResponse("Subscription service is unavailable"));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

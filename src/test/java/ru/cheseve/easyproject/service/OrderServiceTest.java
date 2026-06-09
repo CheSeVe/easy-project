@@ -11,16 +11,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-import ru.cheseve.easyproject.dto.customer.CustomerResponseDTO;
-import ru.cheseve.easyproject.dto.order.*;
-import ru.cheseve.easyproject.entity.Customer;
-import ru.cheseve.easyproject.entity.Order;
-import ru.cheseve.easyproject.enums.Status;
-import ru.cheseve.easyproject.exception.CustomerNotFoundException;
-import ru.cheseve.easyproject.exception.OrderNotFoundException;
-import ru.cheseve.easyproject.mapper.OrderMapper;
-import ru.cheseve.easyproject.repository.CustomerRepository;
-import ru.cheseve.easyproject.repository.OrderRepository;
+import ru.cheseve.easyproject.crm.dto.customer.CustomerResponse;
+import ru.cheseve.easyproject.crm.dto.order.*;
+import ru.cheseve.easyproject.crm.entity.Customer;
+import ru.cheseve.easyproject.crm.entity.Order;
+import ru.cheseve.easyproject.crm.enums.Status;
+import ru.cheseve.easyproject.crm.service.OrderService;
+import ru.cheseve.easyproject.crm.exception.CustomerNotFoundException;
+import ru.cheseve.easyproject.crm.exception.OrderNotFoundException;
+import ru.cheseve.easyproject.crm.mapper.OrderMapper;
+import ru.cheseve.easyproject.crm.repository.CustomerRepository;
+import ru.cheseve.easyproject.crm.repository.OrderRepository;
 
 import java.time.Instant;
 import java.util.List;
@@ -65,11 +66,11 @@ class OrderServiceTest {
 
     @Test
     void getOrderWithCustomer_ExistingId_ReturnsOrderWithCustomerResponseDTO() {
-        var expectedResponse = new OrderWithCustomerResponseDTO(
+        var expectedResponse = new OrderWithCustomerResponse(
                 order.getId(),
                 order.getStatus(),
                 order.getCreatedAt(),
-                new CustomerResponseDTO(
+                new CustomerResponse(
                         customer.getId(),
                         customer.getName(),
                         customer.getSurname(),
@@ -106,7 +107,7 @@ class OrderServiceTest {
         var filter = new OrderFilterDTO(null, null, null, null);
         var pageable = PageRequest.of(0, 10);
         var page = new PageImpl<>(List.of(order), pageable, 1);
-        var expectedResponse = new OrderWithCustomerIdResponseDTO(
+        var expectedResponse = new OrderWithCustomerIdResponse(
                 order.getId(),
                 order.getStatus(),
                 order.getCreatedAt(),
@@ -126,24 +127,24 @@ class OrderServiceTest {
 
     @Test
     void addOrder_ExistingCustomerId_ReturnsResponse() {
-        var requestDTO = new OrderRequestDTO(Status.NEW, 2L);
-        var expectedResponse = new OrderWithCustomerIdResponseDTO(
+        var request = new OrderRequest(Status.NEW, 2L);
+        var expectedResponse = new OrderWithCustomerIdResponse(
                 1L,
                 Status.NEW,
                 order.getCreatedAt(),
                 2L);
         doReturn(Optional.of(customer)).when(customerRepository).findById(2L);
-        doReturn(order).when(orderMapper).toEntity(requestDTO);
+        doReturn(order).when(orderMapper).toEntity(request);
         doReturn(order)
                 .when(orderRepository)
                 .save(argThat(o -> o.getCustomer().equals(customer)));
         doReturn(expectedResponse).when(orderMapper).toResponseWithCustomerId(order);
 
-        var result = service.addOrder(requestDTO);
+        var result = service.addOrder(request);
 
         assertEquals(expectedResponse, result);
         verify(customerRepository).findById(2L);
-        verify(orderMapper).toEntity(requestDTO);
+        verify(orderMapper).toEntity(request);
         verify(orderRepository).save(argThat(o -> o.getCustomer().equals(customer)));
         verify(orderMapper).toResponseWithCustomerId(order);
         verifyNoMoreInteractions(customerRepository, orderMapper, orderRepository);
@@ -151,7 +152,7 @@ class OrderServiceTest {
 
     @Test
     void addOrder_NotExistingCustomerId_ThrowsNotFound() {
-        var requestDTO = new OrderRequestDTO(Status.NEW, 2L);
+        var requestDTO = new OrderRequest(Status.NEW, 2L);
         doReturn(Optional.empty()).when(customerRepository).findById(2L);
 
         var exception = assertThrows(CustomerNotFoundException.class, () -> service.addOrder(requestDTO));
@@ -163,8 +164,8 @@ class OrderServiceTest {
 
     @Test
     void changeOrderStatus_ExistingId_ReturnsResponse() {
-        var requestDTO = new OrderStatusRequestDTO(Status.CANCELED);
-        var expectedResponse = new OrderResponseDTO(order.getId(), Status.CANCELED, order.getCreatedAt());
+        var requestDTO = new OrderStatusRequest(Status.CANCELED);
+        var expectedResponse = new OrderResponse(order.getId(), Status.CANCELED, order.getCreatedAt());
         doReturn(Optional.of(order)).when(orderRepository).findById(1L);
         doReturn(expectedResponse)
                 .when(orderMapper).toResponse(argThat(o -> o.getStatus() == Status.CANCELED));
@@ -179,7 +180,7 @@ class OrderServiceTest {
 
     @Test
     void changeOrderStatus_NotExistingId_ThrowsNotFound() {
-        var requestDTO = new OrderStatusRequestDTO(Status.CANCELED);
+        var requestDTO = new OrderStatusRequest(Status.CANCELED);
         doReturn(Optional.empty()).when(orderRepository).findById(1L);
 
         var exception = assertThrows(OrderNotFoundException.class,() -> service.changeOrderStatus(1L, requestDTO));

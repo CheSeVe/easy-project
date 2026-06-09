@@ -11,7 +11,8 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.cheseve.easyproject.TestContainersConfig;
-import ru.cheseve.easyproject.entity.Order;
+import ru.cheseve.easyproject.crm.entity.Order;
+import ru.cheseve.easyproject.crm.repository.OrderRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 

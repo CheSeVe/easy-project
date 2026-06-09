@@ -88,7 +88,7 @@ class OrderControllerTest {
         mockMvc.perform(get("/api/orders")
                         .param("createdFrom", "2026-01-10T00:00:00Z"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))   // id=10 и id=11
+                .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.totalPages").value(1));
     }
